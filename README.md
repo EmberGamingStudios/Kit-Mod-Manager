@@ -9,7 +9,7 @@ Setup:
   1. Put the KitModManager file in your home directory (NOT the /home directory).
   2. Create a folder called modpacks in your home directory- you will put your mod pack folders in this folder!
   3. Each modpack will use a seperate folder in the modpacks directory that you can select to use. 
-  4. To launch this you will run the command: python3 KitModManager. (I recommend creating a Desktop launcher for this so you don't have to run the command every time you want to use it).
+  4. To launch this you will run the command: python3 KitModManager (I recommend creating a Desktop launcher for this so you don't have to run the command every time you want to use it).
   5. To load a mod pack, you click on the checkbox next the name and then hit the "Load Mod Pack" button- you should see all the mods in the modpack appear in the "Loaded Mods" window.
   6. To unload a modpack from Minecraft hit the "Remove Mod Pack" button- you should see all the mods in the "Loaded Mods" window disappear.
 
