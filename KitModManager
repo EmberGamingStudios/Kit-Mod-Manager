@@ -1,0 +1,159 @@
+# -*- coding: utf-8 -*-
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+import os
+import shutil
+import subprocess
+
+class ModManager(QMainWindow):
+    def __init__(self):
+        super(ModManager, self).__init__()
+
+        self.setObjectName("KitModLoader")
+        self.resize(800, 600)
+
+        self.centralwidget = QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+
+        self.pushButton = QPushButton(self.centralwidget)
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton.setGeometry(QRect(10, 540, 191, 41))
+
+        self.pushButton_2 = QPushButton(self.centralwidget)
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_2.setGeometry(QRect(210, 540, 191, 41))
+
+        self.pushButton_3 = QPushButton(self.centralwidget)
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.pushButton_3.setGeometry(QRect(410, 540, 311, 41))
+
+        self.pushButton_4 = QPushButton(self.centralwidget)
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.pushButton_4.setGeometry(QRect(730, 540, 61, 41))
+
+        self.scrollArea = QScrollArea(self.centralwidget)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollArea.setGeometry(QRect(10, 20, 381, 511))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents = QWidget()
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 377, 507))
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+
+        self.scrollArea_2 = QScrollArea(self.centralwidget)
+        self.scrollArea_2.setObjectName("scrollArea_2")
+        self.scrollArea_2.setGeometry(QRect(400, 20, 391, 511))
+        self.scrollArea_2.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_2 = QWidget()
+        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 387, 507))
+        self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
+
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName("label")
+        self.label.setGeometry(QRect(170, 0, 71, 18))
+
+        self.label_2 = QLabel(self.centralwidget)
+        self.label_2.setObjectName("label_2")
+        self.label_2.setGeometry(QRect(550, 0, 91, 18))
+
+        self.setCentralWidget(self.centralwidget)
+
+        self.statusbar = QStatusBar(self)
+        self.statusbar.setObjectName("statusbar")
+        self.setStatusBar(self.statusbar)
+
+        self.retranslateUi()
+
+        self.modpacks_folder = os.path.expanduser('~/modpacks')
+        self.minecraft_mods_folder = os.path.expanduser('~/.minecraft/mods')
+
+        if not os.path.exists(self.minecraft_mods_folder):
+            os.makedirs(self.minecraft_mods_folder)
+
+        self.init_layouts()
+        self.load_modpacks()
+
+        self.pushButton.clicked.connect(self.load_mod_pack)
+        self.pushButton_2.clicked.connect(self.remove_mod_pack)
+        self.pushButton_3.clicked.connect(self.start_minecraft)
+        self.pushButton_4.clicked.connect(self.close_application)
+
+    def retranslateUi(self):
+        self.setWindowTitle(QCoreApplication.translate("KitModLoader", "Kit Mod Manager", None))
+        self.pushButton.setText(QCoreApplication.translate("KitModLoader", "Load Mod Pack", None))
+        self.pushButton_2.setText(QCoreApplication.translate("KitModLoader", "Remove Mod Pack", None))
+        self.pushButton_3.setText(QCoreApplication.translate("KitModLoader", "Start Minecraft", None))
+        self.pushButton_4.setText(QCoreApplication.translate("KitModLoader", "Close", None))
+        self.label.setText(QCoreApplication.translate("KitModLoader", "Mod Packs", None))
+        self.label_2.setText(QCoreApplication.translate("KitModLoader", "Loaded Mods", None))
+
+    def init_layouts(self):
+        self.modpacks_layout = QVBoxLayout(self.scrollAreaWidgetContents)
+        self.loaded_mods_layout = QVBoxLayout(self.scrollAreaWidgetContents_2)
+
+        self.scrollAreaWidgetContents.setLayout(self.modpacks_layout)
+        self.scrollAreaWidgetContents_2.setLayout(self.loaded_mods_layout)
+
+    def load_modpacks(self):
+        while self.modpacks_layout.count():
+            item = self.modpacks_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        while self.loaded_mods_layout.count():
+            item = self.loaded_mods_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        modpacks = os.listdir(self.modpacks_folder)
+        for modpack in modpacks:
+            modpack_path = os.path.join(self.modpacks_folder, modpack)
+            if os.path.isdir(modpack_path):
+                item = QCheckBox(modpack)
+                self.modpacks_layout.addWidget(item)
+
+        installed_mods = os.listdir(self.minecraft_mods_folder)
+        for mod in installed_mods:
+            mod_path = os.path.join(self.minecraft_mods_folder, mod)
+            if os.path.isfile(mod_path):
+                item = QCheckBox(mod)
+                self.loaded_mods_layout.addWidget(item)
+
+    def load_mod_pack(self):
+        for i in range(self.modpacks_layout.count()):
+            widget = self.modpacks_layout.itemAt(i).widget()
+            if isinstance(widget, QCheckBox) and widget.isChecked():
+                modpack = widget.text()
+                source_folder = os.path.join(self.modpacks_folder, modpack)
+                for file_name in os.listdir(source_folder):
+                    source_file = os.path.join(source_folder, file_name)
+                    destination_file = os.path.join(self.minecraft_mods_folder, file_name)
+                    if os.path.isfile(source_file):
+                        shutil.copy(source_file, destination_file)
+        self.load_modpacks()
+
+    def remove_mod_pack(self):
+        for file_name in os.listdir(self.minecraft_mods_folder):
+            mod_file = os.path.join(self.minecraft_mods_folder, file_name)
+            if os.path.isfile(mod_file):
+                os.remove(mod_file)
+        self.load_modpacks()
+
+    def start_minecraft(self):
+        try:
+            subprocess.run(['minecraft-launcher'], check=True)
+        except FileNotFoundError:
+            QMessageBox.critical(self, "Error", "Minecraft launcher not found. Please ensure it is installed and in your PATH.")
+
+    def close_application(self):
+        self.close()
+
+if __name__ == '__main__':
+    import sys
+    app = QApplication(sys.argv)
+    window = ModManager()
+    window.show()
+    sys.exit(app.exec_())
